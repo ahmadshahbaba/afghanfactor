@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سیستم فاکتور ساز حرفه ای</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font@v30.1.0/dist/font-face.css" rel="stylesheet" type="text/css" />
+    <!-- کتابخانه‌های لازم برای تولید PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #2c3e50;
+            --accent-color: #e74c3c;
+            --light-color: #f8f9fa;
+            --dark-color: #2c3e50;
+            --success-color: #27ae60;
+            --border-color: #dee2e6;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Vazir', Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: white;
+            color: var(--dark-color);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            border-bottom: 3px solid var(--dark-color);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .app-description {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+        }
+
+        .app-container {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .editor-panel {
+            flex: 1;
+            min-width: 350px;
+            max-width: 500px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .preview-panel {
+            width: 210mm; /* عرض A4 */
+            min-height: 297mm; /* ارتفاع A4 */
+            background: white;
+            padding: 15mm;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            display: none;
+            border: 1px solid var(--border-color);
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+            color: var(--dark-color);
+            font-size: 0.9rem;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--dark-color);
+            box-shadow: 0 0 0 2px rgba(44, 62, 80, 0.1);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: var(--dark-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:hover {
+            background-color: #1a252f;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary {
+            background-color: var(--dark-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #1a252f;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+        }
+
+        .btn-success:hover {
+            background-color: #219653;
+        }
+
+        .btn-danger {
+            background-color: var(--accent-color);
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-print {
+            background-color: #3498db;
+        }
+
+        .btn-print:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-pdf {
+            background-color: #9b59b6;
+        }
+
+        .btn-pdf:hover {
+            background-color: #8e44ad;
+        }
+
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .company-info {
+            flex: 1;
+            text-align: right;
+        }
+
+        /* اصلاح بخش invoice-details برای وسط‌چین کردن محتوا */
+        .invoice-details {
+            text-align: center;
+            background: var(--light-color);
+            padding: 12px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-color);
+            min-width: 180px;
+            margin-right: 20px;
+        }
+
+        .invoice-title {
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .client-info {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: var(--light-color);
+            border-radius: 6px;
+            border-right: 3px solid var(--dark-color);
+            font-size: 0.9rem;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+            font-size: 0.85rem;
+        }
+
+        .items-table th {
+            background: var(--light-color);
+            color: var(--dark-color);
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            border-bottom: 2px solid var(--dark-color);
+            border-left: 1px solid var(--border-color);
+        }
+
+        .items-table th:first-child {
+            border-left: none;
+        }
+
+        .items-table td {
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+            border-left: 1px solid var(--border-color);
+        }
+
+        .items-table td:first-child {
+            border-left: none;
+        }
+
+        .items-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* ترازبندی صحیح ستون‌های عددی */
+        .items-table td:nth-child(1) { /* ستون ردیف */
+            text-align: center;
+            width: 8%;
+        }
+
+        .items-table td:nth-child(2) { /* ستون شرح */
+            text-align: right;
+            width: 42%;
+        }
+
+        .items-table td:nth-child(3) { /* ستون تعداد */
+            text-align: center;
+            width: 15%;
+            font-family: 'Courier New', monospace;
+            direction: ltr;
+        }
+
+        .items-table td:nth-child(4) { /* ستون قیمت واحد */
+            text-align: center;
+            width: 20%;
+            font-family: 'Courier New', monospace;
+            direction: ltr;
+        }
+
+        .items-table td:nth-child(5) { /* ستون مبلغ */
+            text-align: center;
+            width: 15%;
+            font-family: 'Courier New', monospace;
+            direction: ltr;
+        }
+
+        .items-table th:nth-child(1) {
+            width: 8%;
+        }
+
+        .items-table th:nth-child(2) {
+            width: 42%;
+        }
+
+        .items-table th:nth-child(3) {
+            width: 15%;
+        }
+
+        .items-table th:nth-child(4) {
+            width: 20%;
+        }
+
+        .items-table th:nth-child(5) {
+            width: 15%;
+        }
+
+        /* استایل جدید برای نمایش جمع‌ها در یک خط */
+        .totals-inline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--light-color);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+
+        .total-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .total-label {
+            font-size: 0.85rem;
+            color: var(--dark-color);
+            margin-bottom: 4px;
+        }
+
+        .total-value {
+            font-size: 1rem;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            direction: ltr;
+        }
+
+        .total-remaining {
+            color: var(--success-color);
+        }
+
+        /* بخش امضا - فقط مدیر فروش - اصلاح شده برای نمایش در سمت راست */
+        .signature-section {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+
+        .signature-box {
+            text-align: center;
+            width: 45%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .signature-line {
+            border-top: 1px solid var(--border-color);
+            margin: 30px 0 8px;
+            width: 200px; /* طول خط امضا */
+        }
+
+        .notes-section {
+            background: var(--light-color);
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            border-right: 3px solid var(--accent-color);
+            font-size: 0.85rem;
+        }
+
+        .note-line {
+            padding: 4px 0;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .note-line:last-child {
+            border-bottom: none;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            margin: 15px 0 10px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .items-container {
+            margin-bottom: 15px;
+        }
+
+        .item-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: var(--light-color);
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .item-desc {
+            flex: 3;
+        }
+
+        .item-qty, .item-price {
+            flex: 1;
+        }
+
+        .item-actions {
+            flex: 0.5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .remove-item {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            font-size: 0.8rem;
+        }
+
+        .remove-item:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+        }
+
+        .output-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        .logo-upload-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .logo-preview {
+            max-width: 120px;
+            max-height: 80px;
+            border: 1px dashed var(--border-color);
+            border-radius: 6px;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--light-color);
+        }
+
+        .logo-preview img {
+            max-width: 100%;
+            max-height: 70px;
+            object-fit: contain;
+        }
+
+        .logo-placeholder {
+            color: #6c757d;
+            text-align: center;
+            padding: 15px;
+            font-size: 0.8rem;
+        }
+
+        .logo-upload-btn {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .logo-upload-btn input[type=file] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .invoice-logo {
+            max-width: 120px;
+            max-height: 70px;
+            object-fit: contain;
+            margin-bottom: 8px;
+        }
+
+        .company-products {
+            margin-top: 6px;
+            padding: 6px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border-right: 3px solid var(--success-color);
+            font-size: 0.8rem;
+        }
+
+        .left-border-line {
+            position: absolute;
+            left: 5mm;
+            top: 20mm;
+            bottom: 20mm;
+            width: 2px;
+            background-color: var(--dark-color);
+        }
+
+        .bottom-border-line {
+            position: absolute;
+            bottom: 5mm;
+            left: 20mm;
+            right: 20mm;
+            height: 2px;
+            background-color: var(--dark-color);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .app-container {
+                flex-direction: column;
+            }
+
+            .editor-panel, .preview-panel {
+                min-width: 100%;
+                max-width: 100%;
+            }
+            
+            .preview-panel {
+                width: 100%;
+                min-height: auto;
+                padding: 10px;
+            }
+
+            .invoice-header {
+                flex-direction: column;
+            }
+
+            .invoice-details {
+                margin-top: 12px;
+                min-width: auto;
+                align-items: center;
+                margin-right: 0;
+            }
+
+            .item-row {
+                flex-direction: column;
+            }
+
+            .signature-section {
+                justify-content: center;
+            }
+
+            .signature-box {
+                width: 100%;
+                align-items: center;
+            }
+
+            .signature-line {
+                width: 150px;
+            }
+
+            .items-table th,
+            .items-table td {
+                padding: 8px;
+                font-size: 0.8rem;
+            }
+
+            .totals-inline {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .total-item {
+                width: 100%;
+                text-align: center;
+            }
+
+            .left-border-line, .bottom-border-line {
+                display: none;
+            }
+        }
+
+        /* استایل‌های مخصوص چاپ - بهینه‌سازی برای آیتم‌های زیاد */
+        @media print {
+            body * {
+                visibility: hidden;
+                margin: 0;
+                padding: 0;
+            }
+            
+            .preview-panel, .preview-panel * {
+                visibility: visible;
+            }
+            
+            .preview-panel {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                box-shadow: none;
+                padding: 10mm !important;
+                margin: 0;
+                border: none;
+                font-size: 12px !important;
+            }
+
+            /* چیدمان صحیح هدر در چاپ */
+            .invoice-header {
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: space-between !important;
+                align-items: flex-start !important;
+                margin-bottom: 10px !important;
+                padding-bottom: 8px !important;
+            }
+            
+            .company-info {
+                text-align: right !important;
+                flex: 1 !important;
+                margin-left: 15px !important;
+            }
+            
+            /* اصلاح بخش invoice-details در حالت چاپ */
+            .invoice-details {
+                text-align: center !important;
+                align-items: center !important;
+                justify-content: center !important;
+                margin-right: 0 !important;
+                margin-left: 15px !important;
+                min-width: 160px !important;
+            }
+            
+            .company-info h2 {
+                font-size: 1.4rem !important;
+            }
+            
+            .company-products {
+                font-size: 0.7rem !important;
+                padding: 4px !important;
+            }
+            
+            .client-info {
+                margin-bottom: 10px !important;
+                padding: 8px !important;
+                font-size: 0.8rem !important;
+            }
+            
+            .items-table {
+                font-size: 0.7rem !important;
+                margin-bottom: 10px !important;
+            }
+            
+            .items-table th,
+            .items-table td {
+                padding: 6px 4px !important;
+            }
+            
+            /* بخش اصلاح شده برای نمایش جمع‌ها در یک خط در چاپ */
+            .totals-inline {
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                padding: 8px !important;
+                margin-bottom: 10px !important;
+                font-size: 0.8rem !important;
+            }
+            
+            .total-item {
+                text-align: center !important;
+                flex: 1 !important;
+            }
+            
+            .total-label {
+                font-size: 0.75rem !important;
+                margin-bottom: 2px !important;
+            }
+            
+            .total-value {
+                font-size: 0.85rem !important;
+            }
+            
+            .notes-section {
+                padding: 8px !important;
+                margin-top: 10px !important;
+                font-size: 0.7rem !important;
+            }
+            
+            /* اصلاح بخش امضا در حالت چاپ */
+            .signature-section {
+                justify-content: flex-end !important;
+                margin-top: 15px !important;
+            }
+            
+            .signature-box {
+                width: 45% !important;
+                align-items: flex-end !important;
+            }
+            
+            .signature-line {
+                margin: 20px 0 5px !important;
+                width: 150px !important;
+            }
+
+            .btn {
+                display: none;
+            }
+            
+            @page {
+                size: A4;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>سیستم فاکتور ساز حرفه ای</h1>
+            <p class="app-description">طراحی شده برای فروشگاه های افغانستان</p>
+        </header>
+
+        <div class="app-container">
+            <div class="editor-panel">
+                <h2>تنظیمات فاکتور</h2>
+
+                <div class="section-title">لوگوی شرکت</div>
+
+                <div class="logo-upload-container">
+                    <div class="logo-preview" id="logoPreview">
+                        <div class="logo-placeholder">لوگوی شرکت نمایش داده می‌شود</div>
+                    </div>
+                    <button class="btn logo-upload-btn">
+                        آپلود لوگو
+                        <input type="file" id="logoUpload" accept="image/*">
+                    </button>
+                    <button class="btn btn-danger" id="removeLogo" style="display:none;">حذف لوگو</button>
+                </div>
+
+                <div class="section-title">اطلاعات شرکت</div>
+
+                <div class="form-group">
+                    <label for="companyName">نام برند/شرکت</label>
+                    <input type="text" id="companyName" value="شرکت نمونه">
+                </div>
+
+                <div class="form-group">
+                    <label for="companyProducts">محصولات شرکت (هر محصول در یک خط)</label>
+                    <textarea id="companyProducts" rows="3">کالای الکترونیکی
+لوازم خانگی
+مواد غذایی</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="companyAddress">آدرس شرکت</label>
+                    <textarea id="companyAddress" rows="2">کابل، افغانستان</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="companyPhone">شماره تماس</label>
+                    <input type="text" id="companyPhone" value="+93 123 456 789">
+                </div>
+
+                <div class="form-group">
+                    <label for="companyEmail">ایمیل شرکت</label>
+                    <input type="text" id="companyEmail" value="info@sample.com">
+                </div>
+
+                <div class="section-title">اطلاعات مشتری</div>
+
+                <div class="form-group">
+                    <label for="clientName">نام مشتری</label>
+                    <input type="text" id="clientName" value="آقای/خانم ...">
+                </div>
+
+                <div class="form-group">
+                    <label for="clientNumber">شماره مشتری</label>
+                    <input type="text" id="clientNumber" value="CUS-001">
+                </div>
+
+                <div class="form-group">
+                    <label for="clientAddress">آدرس مشتری</label>
+                    <textarea id="clientAddress" rows="2">آدرس مشتری</textarea>
+                </div>
+
+                <div class="section-title">جزئیات فاکتور</div>
+
+                <div class="form-group">
+                    <label for="invoiceNumber">شماره فاکتور</label>
+                    <input type="text" id="invoiceNumber" value="INV-001">
+                </div>
+
+                <div class="form-group">
+                    <label for="invoiceDate">تاریخ فاکتور</label>
+                    <input type="text" id="invoiceDate" value="۱۴۰۲/۰۱/۱۵">
+                </div>
+
+                <div class="section-title">آیتم‌های فاکتور</div>
+
+                <div class="items-container" id="itemsContainer">
+                    <!-- Items will be added here dynamically -->
+                </div>
+
+                <div class="form-group">
+                    <button class="btn btn-success" id="addItem">+ افزودن ردیف جدید</button>
+                </div>
+
+                <div class="section-title">اطلاعات پرداخت</div>
+
+                <div class="form-group">
+                    <label for="amountPaid">مبلغ پرداخت شده (افغانی)</label>
+                    <input type="number" id="amountPaid" value="0" min="0">
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="showInvoice">نمایش فاکتور</button>
+                </div>
+            </div>
+
+            <div class="preview-panel" id="invoicePreview">
+                <!-- خط سمت چپ -->
+                <div class="left-border-line"></div>
+
+                <!-- خط زیر فاکتور -->
+                <div class="bottom-border-line"></div>
+
+                <div class="invoice-header">
+                    <div class="company-info">
+                        <h2 id="previewCompanyName">شرکت نمونه</h2>
+                        <div class="company-products" id="previewCompanyProducts">
+                            کالای الکترونیکی، لوازم خانگی، مواد غذایی
+                        </div>
+                        <p id="previewCompanyAddress">کابل، افغانستان</p>
+                        <p id="previewCompanyPhone">+93 123 456 789</p>
+                        <p id="previewCompanyEmail">info@sample.com</p>
+                    </div>
+
+                    <div class="invoice-details">
+                        <div id="previewLogoContainer">
+                            <!-- لوگو اینجا نمایش داده می‌شود -->
+                        </div>
+                        <div class="invoice-details-content">
+                            <p><strong>شماره فاکتور:</strong> <span id="previewInvoiceNumber">INV-001</span></p>
+                            <p><strong>تاریخ:</strong> <span id="previewInvoiceDate">۱۴۰۲/۰۱/۱۵</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="client-info">
+                    <p><strong>مشتری:</strong> <span id="previewClientName">آقای/خانم ...</span></p>
+                    <p><strong>شماره مشتری:</strong> <span id="previewClientNumber">CUS-001</span></p>
+                    <p><strong>آدرس:</strong> <span id="previewClientAddress">آدرس مشتری</span></p>
+                </div>
+
+                <table class="items-table" id="previewItemsTable">
+                    <thead>
+                        <tr>
+                            <th>ردیف</th>
+                            <th>شرح خدمات / کالاها</th>
+                            <th>تعداد</th>
+                            <th>قیمت واحد</th>
+                            <th>مبلغ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="previewItemsBody">
+                        <!-- Items will be added here dynamically -->
+                    </tbody>
+                </table>
+
+                <!-- بخش جدید برای نمایش جمع‌ها در یک خط -->
+                <div class="totals-inline">
+                    <div class="total-item">
+                        <div class="total-label">جمع کل:</div>
+                        <div class="total-value" id="previewSubtotal">0 افغانی</div>
+                    </div>
+                    <div class="total-item">
+                        <div class="total-label">مبلغ پرداخت شده:</div>
+                        <div class="total-value" id="previewAmountPaid">0 افغانی</div>
+                    </div>
+                    <div class="total-item">
+                        <div class="total-label">باقیمانده:</div>
+                        <div class="total-value total-remaining" id="previewRemainingAmount">0 افغانی</div>
+                    </div>
+                </div>
+
+                <div class="notes-section">
+                    <div class="note-line">بدون مهر و امضا مدار اعتبار نیست</div>
+                    <div class="note-line">جنس فروخته شده واپس گرفته نمی‌شود.</div>
+                </div>
+
+                <!-- بخش امضا - فقط مدیر فروش - اصلاح شده برای نمایش در سمت راست -->
+                <div class="signature-section">
+                    <div class="signature-box">
+                        <div class="signature-line"></div>
+                        <p>امضای مدیر فروش</p>
+                    </div>
+                </div>
+
+                <div class="output-actions">
+                    <button class="btn btn-primary" id="backToEdit">بازگشت به ویرایش</button>
+                    <button class="btn btn-print" id="printInvoice">چاپ فاکتور</button>
+                    <button class="btn btn-pdf" id="downloadPDF">دانلود PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize with empty items
+        let items = [];
+        let nextItemId = 1;
+        let companyLogo = null;
+
+        // Update preview when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            renderItems();
+
+            // Add event listener for add item button
+            document.getElementById('addItem').addEventListener('click', addNewItem);
+
+            // Add event listener for show invoice button
+            document.getElementById('showInvoice').addEventListener('click', showInvoice);
+
+            // Add event listener for back to edit button
+            document.getElementById('backToEdit').addEventListener('click', function() {
+                document.getElementById('invoicePreview').style.display = 'none';
+                document.querySelector('.editor-panel').style.display = 'block';
+            });
+
+            // Add event listener for print invoice button
+            document.getElementById('printInvoice').addEventListener('click', function() {
+                window.print();
+            });
+
+            // Add event listener for download PDF button
+            document.getElementById('downloadPDF').addEventListener('click', downloadPDF);
+
+            // Add event listener for logo upload
+            document.getElementById('logoUpload').addEventListener('change', handleLogoUpload);
+
+            // Add event listener for remove logo button
+            document.getElementById('removeLogo').addEventListener('click', removeLogo);
+
+            // Add event listeners to update preview when inputs change
+            const inputs = document.querySelectorAll('#companyName, #companyProducts, #companyAddress, #companyPhone, #companyEmail, #clientName, #clientNumber, #clientAddress, #invoiceNumber, #invoiceDate, #amountPaid');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    // Update preview if it's visible
+                    if (document.getElementById('invoicePreview').style.display === 'block') {
+                        updatePreview();
+                    }
+                });
+            });
+        });
+
+        function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    companyLogo = e.target.result;
+
+                    // Update logo preview in editor
+                    const logoPreview = document.getElementById('logoPreview');
+                    logoPreview.innerHTML = `<img src="${companyLogo}" alt="لوگوی شرکت">`;
+
+                    // Show remove logo button
+                    document.getElementById('removeLogo').style.display = 'block';
+
+                    // Update preview if it's visible
+                    if (document.getElementById('invoicePreview').style.display === 'block') {
+                        updatePreview();
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeLogo() {
+            companyLogo = null;
+
+            // Reset logo preview in editor
+            const logoPreview = document.getElementById('logoPreview');
+            logoPreview.innerHTML = '<div class="logo-placeholder">لوگوی شرکت نمایش داده می‌شود</div>';
+
+            // Hide remove logo button
+            document.getElementById('removeLogo').style.display = 'none';
+
+            // Clear file input
+            document.getElementById('logoUpload').value = '';
+
+            // Update preview if it's visible
+            if (document.getElementById('invoicePreview').style.display === 'block') {
+                updatePreview();
+            }
+        }
+
+        function renderItems() {
+            const container = document.getElementById('itemsContainer');
+            container.innerHTML = '';
+
+            // اگر هیچ آیتمی وجود ندارد، پیام نمایش دهید
+            if (items.length === 0) {
+                const emptyMessage = document.createElement('div');
+                emptyMessage.className = 'empty-items-message';
+                emptyMessage.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #6c757d; background: var(--light-color); border-radius: 6px; border: 1px dashed var(--border-color);">
+                        هیچ آیتمی اضافه نشده است. برای افزودن آیتم روی دکمه "افزودن ردیف جدید" کلیک کنید.
+                    </div>
+                `;
+                container.appendChild(emptyMessage);
+                return;
+            }
+
+            items.forEach((item, index) => {
+                const itemRow = document.createElement('div');
+                itemRow.className = 'item-row';
+                itemRow.innerHTML = `
+                    <div class="item-desc">
+                        <label>شرح آیتم</label>
+                        <input type="text" class="item-description" value="${item.description}" data-id="${item.id}" placeholder="شرح کالا یا خدمت">
+                    </div>
+                    <div class="item-qty">
+                        <label>تعداد</label>
+                        <input type="number" class="item-quantity" value="${item.quantity}" min="0" data-id="${item.id}">
+                    </div>
+                    <div class="item-price">
+                        <label>قیمت (افغانی)</label>
+                        <input type="number" class="item-price-value" value="${item.price}" min="0" data-id="${item.id}">
+                    </div>
+                    <div class="item-actions">
+                        <button class="remove-item" data-id="${item.id}">×</button>
+                    </div>
+                `;
+                container.appendChild(itemRow);
+            });
+
+            // Add event listeners to item inputs
+            const itemInputs = container.querySelectorAll('input');
+            itemInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    updateItem(id, this.className, this.value);
+
+                    // Update preview if it's visible
+                    if (document.getElementById('invoicePreview').style.display === 'block') {
+                        updatePreview();
+                    }
+                });
+            });
+
+            // Add event listeners to remove buttons
+            const removeButtons = container.querySelectorAll('.remove-item');
+            removeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    removeItem(id);
+                    renderItems();
+
+                    // Update preview if it's visible
+                    if (document.getElementById('invoicePreview').style.display === 'block') {
+                        updatePreview();
+                    }
+                });
+            });
+        }
+
+        function addNewItem() {
+            items.push({
+                id: nextItemId,
+                description: "",
+                quantity: 0,
+                price: 0
+            });
+            nextItemId++;
+            renderItems();
+
+            // Update preview if it's visible
+            if (document.getElementById('invoicePreview').style.display === 'block') {
+                updatePreview();
+            }
+        }
+
+        function removeItem(id) {
+            items = items.filter(item => item.id !== id);
+        }
+
+        function updateItem(id, field, value) {
+            const item = items.find(item => item.id === id);
+            if (!item) return;
+
+            if (field === 'item-description') {
+                item.description = value;
+            } else if (field === 'item-quantity') {
+                item.quantity = parseInt(value) || 0;
+            } else if (field === 'item-price-value') {
+                item.price = parseInt(value) || 0;
+            }
+        }
+
+        function showInvoice() {
+            updatePreview();
+            document.querySelector('.editor-panel').style.display = 'none';
+            document.getElementById('invoicePreview').style.display = 'block';
+        }
+
+        function updatePreview() {
+            // Company information
+            document.getElementById('previewCompanyName').textContent = document.getElementById('companyName').value;
+
+            // Format company products
+            const productsText = document.getElementById('companyProducts').value;
+            const productsArray = productsText.split('\n').filter(line => line.trim() !== '');
+            const formattedProducts = productsArray.join('، ');
+            document.getElementById('previewCompanyProducts').textContent = formattedProducts || 'محصولات شرکت';
+
+            document.getElementById('previewCompanyAddress').textContent = document.getElementById('companyAddress').value;
+            document.getElementById('previewCompanyPhone').textContent = document.getElementById('companyPhone').value;
+            document.getElementById('previewCompanyEmail').textContent = document.getElementById('companyEmail').value;
+
+            // Client information
+            document.getElementById('previewClientName').textContent = document.getElementById('clientName').value;
+            document.getElementById('previewClientNumber').textContent = document.getElementById('clientNumber').value;
+            document.getElementById('previewClientAddress').textContent = document.getElementById('clientAddress').value;
+
+            // Invoice details
+            document.getElementById('previewInvoiceNumber').textContent = document.getElementById('invoiceNumber').value;
+            document.getElementById('previewInvoiceDate').textContent = document.getElementById('invoiceDate').value;
+
+            // Update logo in preview
+            const logoContainer = document.getElementById('previewLogoContainer');
+            if (companyLogo) {
+                logoContainer.innerHTML = `<img src="${companyLogo}" alt="لوگوی شرکت" class="invoice-logo">`;
+            } else {
+                // اگر لوگو آپلود نشده، از کلمه "فاکتور" استفاده می‌کنیم
+                logoContainer.innerHTML = '<h1 class="invoice-title">فاکتور</h1>';
+            }
+
+            // Invoice items
+            const itemsBody = document.getElementById('previewItemsBody');
+            itemsBody.innerHTML = '';
+
+            let subtotal = 0;
+
+            items.forEach((item, index) => {
+                const row = document.createElement('tr');
+                const total = item.quantity * item.price;
+                subtotal += total;
+
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.description || '---'}</td>
+                    <td>${item.quantity}</td>
+                    <td>${formatCurrency(item.price)}</td>
+                    <td>${formatCurrency(total)}</td>
+                `;
+                itemsBody.appendChild(row);
+            });
+
+            // If no items, show a message
+            if (items.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="5" style="text-align: center; padding: 20px; color: #6c757d;">
+                        هیچ آیتمی اضافه نشده است
+                    </td>
+                `;
+                itemsBody.appendChild(row);
+            }
+
+            // Calculate totals
+            const amountPaid = parseInt(document.getElementById('amountPaid').value) || 0;
+            const remainingAmount = Math.max(0, subtotal - amountPaid);
+
+            document.getElementById('previewSubtotal').textContent = formatCurrency(subtotal);
+            document.getElementById('previewAmountPaid').textContent = formatCurrency(amountPaid);
+            document.getElementById('previewRemainingAmount').textContent = formatCurrency(remainingAmount);
+        }
+
+        function formatCurrency(amount) {
+            // Format number with commas and add currency
+            return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " افغانی";
+        }
+
+        // تابع جدید برای دانلود PDF
+        function downloadPDF() {
+            // اطمینان از بارگذاری کتابخانه‌ها
+            if (typeof jspdf === 'undefined' || typeof html2canvas === 'undefined') {
+                alert('لطفاً صبر کنید تا کتابخانه‌های لازم بارگذاری شوند');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            
+            // گرفتن عنصر فاکتور
+            const element = document.getElementById('invoicePreview');
+            
+            // مخفی کردن دکمه‌ها هنگام تولید PDF
+            const buttons = element.querySelector('.output-actions');
+            buttons.style.display = 'none';
+            
+            // استفاده از html2canvas برای گرفتن اسکرین‌شات از فاکتور
+            html2canvas(element, {
+                scale: 2, // کیفیت بالا
+                useCORS: true,
+                logging: false
+            }).then(canvas => {
+                // ایجاد PDF جدید
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const imgWidth = 210; // عرض A4 به میلی‌متر
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                
+                // اضافه کردن تصویر به PDF
+                const imgData = canvas.toDataURL('image/png');
+                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                
+                // نمایش مجدد دکمه‌ها
+                buttons.style.display = 'flex';
+                
+                // دانلود PDF
+                pdf.save('فاکتور-' + document.getElementById('invoiceNumber').value + '.pdf');
+            }).catch(error => {
+                console.error('خطا در تولید PDF:', error);
+                alert('خطا در تولید PDF. لطفاً دوباره تلاش کنید.');
+                
+                // نمایش مجدد دکمه‌ها در صورت خطا
+                buttons.style.display = 'flex';
+            });
+        }
+    </script>
+</body>
+</html>
